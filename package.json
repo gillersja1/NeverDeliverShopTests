@@ -1,0 +1,19 @@
+{
+  "name": "never-deliver-shop-tests",
+  "version": "1.0.0",
+  "description": "UI tests for the NeverDeliver satirical e-commerce demo",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "codegen": "playwright codegen https://never-deliver-shop.vercel.app",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^20.19.43",
+    "typescript": "^5.9.3"
+  }
+}
