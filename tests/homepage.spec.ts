@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
 
 /**
  * Smoke tests for the NeverDeliver homepage - a satirical e-commerce demo
@@ -46,8 +46,16 @@ test.describe('Homepage', () => {
   });
 
   test('region, currency, and language selectors are visible', async ({ page }) => {
-    await expect(page.getByText('UK', { exact: true })).toBeVisible();
-    await expect(page.getByText('GBP', { exact: true })).toBeVisible();
-    await expect(page.getByText('EN', { exact: true })).toBeVisible();
+    const regionSelect = page.locator('select', { hasText: 'UK' });
+    const currencySelect = page.locator('select', { hasText: 'GBP' });
+    const languageSelect = page.locator('select', { hasText: 'EN' });
+
+    await expect(regionSelect).toBeVisible();
+    await expect(currencySelect).toBeVisible();
+    await expect(languageSelect).toBeVisible();
+
+    await expect(regionSelect).toHaveValue('UK');
+    await expect(currencySelect).toHaveValue('GBP');
+    await expect(languageSelect).toHaveValue('EN');
   });
 });
