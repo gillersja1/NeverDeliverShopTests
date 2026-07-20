@@ -56,6 +56,6 @@ test.describe('Homepage', () => {
 
     await expect(regionSelect).toHaveValue('UK');
     await expect(currencySelect).toHaveValue('GBP');
-    await expect(languageSelect).toHaveValue('EN');
+    await expect(languageSelect).toHaveValue('en');
   });
 });
