@@ -46,9 +46,9 @@ test.describe('Homepage', () => {
   });
 
   test('region, currency, and language selectors are visible', async ({ page }) => {
-    const regionSelect = page.locator('select', { hasText: 'UK' });
-    const currencySelect = page.locator('select', { hasText: 'GBP' });
-    const languageSelect = page.locator('select', { hasText: 'EN' });
+    const regionSelect = page.getByLabel('Select delivery country');
+    const currencySelect = page.getByLabel('Select currency');
+    const languageSelect = page.getByLabel('Select language');
 
     await expect(regionSelect).toBeVisible();
     await expect(currencySelect).toBeVisible();
