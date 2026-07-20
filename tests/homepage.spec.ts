@@ -46,9 +46,9 @@ test.describe('Homepage', () => {
   });
 
   test('region, currency, and language selectors are visible', async ({ page }) => {
-    const regionSelect = page.getByLabel('Select delivery country');
-    const currencySelect = page.getByLabel('Select currency');
-    const languageSelect = page.getByLabel('Select language');
+    const regionSelect = page.locator('select[aria-label="Select delivery country"]:visible');
+    const currencySelect = page.locator('select[aria-label="Select currency"]:visible');
+    const languageSelect = page.locator('select[aria-label="Select language"]:visible');
 
     await expect(regionSelect).toBeVisible();
     await expect(currencySelect).toBeVisible();
