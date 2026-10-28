@@ -3,17 +3,10 @@ const { test, expect } = require('@playwright/test');
 /**
  * Catalog/listing page checks.
  *
- * A couple of things that would need real filtering/sorting BEHAVIOR to
- * verify - e.g. does clicking "Beauty" actually filter results? does
- * "Sort by" reorder them? - couldn't be confirmed from a static
- * screenshot, so they're left as test.fixme() below rather than asserted
- * on a guess. Un-skip and fill these in once you've confirmed the real
- * behavior, e.g. by running:
- *
- *   npm run codegen
- *
- * which opens Playwright's codegen recorder against the live site and
- * generates real locators/assertions as you click around.
+ * Category names appear twice on the page - once in the header nav and
+ * once as a filter pill in the main content - so filter locators are
+ * scoped to #main-content to avoid Playwright strict-mode duplicate
+ * matches.
  */
 
 test.describe('Catalog', () => {
@@ -35,18 +28,42 @@ test.describe('Catalog', () => {
     await expect(page.getByText(/-\d+%/).first()).toBeVisible();
   });
 
-  test.fixme('selecting a category filter pill updates the result count', async ({ page }) => {
-    // Ambiguous without inspecting the DOM: "Beauty" appears in both the
-    // top category nav bar and the filter pill row below the hero, so a
-    // plain text locator here would hit Playwright's strict-mode
-    // duplicate-match error. Scope this to the pill row's actual
-    // container once you've confirmed its selector via codegen or
-    // browser devtools.
+  test('selecting a category filter pill narrows the results', async ({ page }) => {
+    const resultCount = page.getByText(/\d+ results · Page \d+ of \d+/);
+    const readTotal = async () => parseInt((await resultCount.textContent()) ?? '', 10);
+
+    await expect(resultCount).toBeVisible();
+    const totalBefore = await readTotal();
+
+    await page.locator('#main-content').getByRole('link', { name: 'beauty', exact: true }).click();
+
+    await expect(page).toHaveURL(/[?&]category=beauty/);
+    await expect.poll(readTotal).toBeLessThan(totalBefore);
+    expect(await readTotal()).toBeGreaterThan(0);
   });
 
-  test.fixme('cart icon reflects items added to cart', async ({ page }) => {
-    // Not verifiable from a screenshot: need to confirm whether product
-    // cards expose an "Add to cart" action at all, and what the cart
-    // badge/counter looks like once populated.
+  test('adding items updates the cart count', async ({ page }) => {
+    // The cart drawer's heading is rendered at every viewport, so it's a
+    // more reliable count than the header icon (see the a11y test below).
+    const cartHeading = page.getByRole('heading', { name: /Shopping Cart \(\d+\)/ });
+    const addButtons = page.locator('#main-content').getByRole('button', { name: 'Add to Cart' });
+
+    await expect(cartHeading).toHaveText('Shopping Cart (0)');
+
+    await addButtons.nth(0).click();
+    await expect(cartHeading).toHaveText('Shopping Cart (1)');
+
+    await addButtons.nth(1).click();
+    await expect(cartHeading).toHaveText('Shopping Cart (2)');
+  });
+
+  test('header cart button has an accessible name', async ({ page }, testInfo) => {
+    // Known defect: below the md breakpoint the cart button is icon-only
+    // with no aria-label, so screen readers announce just "button"
+    // (WCAG 4.1.2 Name, Role, Value). Marked as an expected failure on
+    // mobile so the suite stays green but flags it the moment it's fixed.
+    test.fail(testInfo.project.name === 'Mobile Chrome', 'Cart button has no accessible name on mobile viewports');
+
+    await expect(page.getByRole('banner').getByRole('button', { name: /cart/i })).toBeVisible();
   });
 });

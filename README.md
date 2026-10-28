@@ -5,35 +5,24 @@ a satirical e-commerce demo site ("Big catalog energy, zero delivery
 anxiety.") built with a full mock product catalog, flash sale countdown,
 category filters, and region/currency/language selectors.
 
-## An important caveat about this project
+## Defects found
 
-Unlike the other projects in this portfolio, this one's test locators were
-written from a **screenshot** of the site rather than by inspecting its
-actual HTML. That means:
+Testing a site I don't control means writing tests that report what's
+actually wrong rather than working around it. Found so far:
 
-- Locators use visible text and ARIA roles (`getByText`, `getByRole`,
-  `getByPlaceholder`) rather than IDs/classes/`data-testid`, since those
-  weren't visible in a screenshot. This is Playwright's own recommended
-  fallback when you don't control the markup, but it's inherently more
-  brittle than test-id-based locators.
-- Two tests in `catalog.spec.ts` are marked `test.fixme()` rather than
-  given real assertions, because I couldn't verify from a screenshot
-  whether category filtering or the cart actually update dynamically.
-  Fill these in once you've confirmed the real behavior — the easiest way
-  is:
+| # | Defect | Severity | Where it's covered |
+|---|---|---|---|
+| 1 | Below the `md` breakpoint, the header cart button is icon-only with no `aria-label`, so screen readers announce just "button" ([WCAG 4.1.2 Name, Role, Value](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html)) | Medium (accessibility) | `catalog.spec.ts` › *header cart button has an accessible name* — marked `test.fail()` on Mobile Chrome so the suite stays green but flags the day it's fixed |
+| 2 | Each "Add to Cart" `<button>` is nested inside the product card's `<a>` link. Interactive content inside a link is invalid HTML and gives keyboard and screen-reader users two overlapping targets | Low (accessibility) | Observed while inspecting the DOM; not yet asserted |
 
-  ```bash
-  npm run codegen
-  ```
+## Locator strategy
 
-  which opens Playwright's recorder against the live site, generates
-  accurate locators as you interact with it, and shows you the real
-  behavior to assert against.
-
-**If this is your own project**, adding `data-testid` attributes to key
-elements (search input, category pills, product cards, cart) would make
-these tests significantly more robust than text matching, and is worth
-doing before this becomes a serious regression suite.
+The site has no `data-testid` attributes, so locators use ARIA roles and
+visible text (`getByRole`, `getByText`) — Playwright's recommended
+approach when you don't control the markup, and one that doubles as a
+light accessibility check. Category names appear in both the header nav
+and the filter pill row, so filter locators are scoped to
+`#main-content` to avoid strict-mode duplicate matches.
 
 ## Project structure
 
@@ -41,8 +30,8 @@ doing before this becomes a serious regression suite.
 NeverDeliverShopTests/
 ├── tests/
 │   ├── homepage.spec.ts   # Hero content, flash sale countdown, search box
-│   └── catalog.spec.ts    # Result count, sort/pagination controls, badges
-├── playwright.config.ts   # Targets never-deliver-shop.vercel.app directly
+│   └── catalog.spec.ts    # Results, category filtering, cart, cart a11y
+├── playwright.config.js   # Targets never-deliver-shop.vercel.app directly
 └── .github/workflows/playwright.yml
 ```
 
@@ -73,8 +62,10 @@ npm run report           # view the last HTML report
   a static string), the search input accepts text, and the
   region/currency/language selectors are visible
 - **`catalog.spec.ts`** — a result count + pagination summary is shown,
-  sort/per-page controls are visible, and product cards display their
-  delivery/discount badges
+  sort/per-page controls are visible, product cards display their
+  delivery/discount badges, a category filter narrows the results, adding
+  items updates the cart count, and the header cart button has an
+  accessible name
 
 ## CI/CD
 
@@ -86,6 +77,6 @@ would miss.
 
 ## Possible extensions
 
-- Replace the fixme'd tests with real assertions once category filtering and cart behavior are confirmed
+- Add an axe-core scan (`@axe-core/playwright`) to catch issues like defect #2 automatically
 - Add a Page Object Model layer (`pages/`) once locators are confirmed stable, matching the structure used in this portfolio's other Playwright TS project
 - Add visual regression coverage for the flash sale banner/countdown, which is exactly the kind of dynamic content that's easy to break without noticing
