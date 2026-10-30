@@ -34,6 +34,15 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test
 
+      - name: Send test results to Grafana
+        if: always()
+        uses: gillersja1/test-results-otel@v1
+        with:
+          results: test-results/junit.xml
+          suite: ui
+          otlp-endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          otlp-headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
