@@ -9,6 +9,8 @@ module.exports = defineConfig({
   reporter: [
     ['html', { open: 'never' }],
     ['list'],
+    // junit.xml is for test-results-otel in CI.
+    ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
 
   use: {
